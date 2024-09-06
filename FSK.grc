@@ -1,0 +1,852 @@
+options:
+  parameters:
+    author: Ben Duval
+    catch_exceptions: 'True'
+    category: '[GRC Hier Blocks]'
+    cmake_opt: ''
+    comment: ''
+    copyright: ''
+    description: ''
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: qt_gui
+    hier_block_src_path: '.:'
+    id: fsk2
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: prompt
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: 'FSK '
+    window_size: (1000,1000)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 8]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: baud_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: 5*fdev
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [568, 12.0]
+    rotation: 0
+    state: true
+- name: fdev
+  id: variable
+  parameters:
+    comment: ''
+    value: '125000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [472, 12.0]
+    rotation: 0
+    state: true
+- name: freq
+  id: variable
+  parameters:
+    comment: ''
+    value: '915000000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [288, 12.0]
+    rotation: 0
+    state: true
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: 5*symb_rate
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [184, 12.0]
+    rotation: 0
+    state: enabled
+- name: symb_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: baud_rate
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [376, 12.0]
+    rotation: 0
+    state: true
+- name: blocks_message_debug_0
+  id: blocks_message_debug
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    en_uvec: 'True'
+    log_level: info
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [792, 1040.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: byte
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1152, 368.0]
+    rotation: 0
+    state: enabled
+- name: epy_block_0
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nfrom gnuradio import gr\nimport pmt\n\nclass\
+      \ blk(gr.sync_block):\n    def __init__(self, samp_rate=1e6, fsk_deviation=500e3):\n\
+      \        gr.sync_block.__init__(\n            self,\n            name='FSK Modulation',\n\
+      \            in_sig=[np.uint8],\n            out_sig=[np.complex64]\n      \
+      \  )\n        self.samp_rate = samp_rate\n        self.fsk_deviation = fsk_deviation\n\
+      \        self.center_freq = 0\n        self.phase_inc0 = 2.0 * np.pi * (self.center_freq\
+      \ - self.fsk_deviation) / self.samp_rate\n        self.phase_inc1 = 2.0 * np.pi\
+      \ * (self.center_freq + self.fsk_deviation) / self.samp_rate\n        self.phase\
+      \ = 0\n\n        # Register message port to receive chunk_ready messages\n \
+      \       self.message_port_register_in(pmt.intern(\"in\"))\n        self.set_msg_handler(pmt.intern(\"\
+      in\"), self.handle_message)\n\n        self.chunk_data = None  # Store chunk\
+      \ data when received\n\n    def handle_message(self, msg):\n        # Handle\
+      \ the \"chunk_ready\" message\n        if pmt.is_pair(msg):\n            key\
+      \ = pmt.car(msg)\n            if pmt.eq(key, pmt.intern(\"chunk_ready\")):\n\
+      \                self.chunk_data = pmt.to_python(pmt.cdr(msg))\n           \
+      \     #print(f\"Received chunk: {self.chunk_data[:10]}\")  # Debug: print the\
+      \ first 10 bits of the chunk\n\n    def work(self, input_items, output_items):\n\
+      \        out = output_items[0]\n        in0 = input_items[0]\n\n        # Process\
+      \ the input data\n        if len(in0) > 0:  # Ensure there's input data to process\n\
+      \            #print(f\"Modulating data: {in0[:10]}\")  # Debug: print the first\
+      \ 10 bits of input data\n            for i in range(len(in0)):\n           \
+      \     if in0[i] == 0:\n                    self.phase += self.phase_inc0\n \
+      \               else:\n                    self.phase += self.phase_inc1\n \
+      \               out[i] = np.exp(1j * self.phase)\n                if self.phase\
+      \ > 2.0 * np.pi:\n                    self.phase -= 2.0 * np.pi\n        else:\n\
+      \            print(\"Received empty input data\")  # Debug: indicate when input\
+      \ data is empty\n\n        return len(out)\n\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    fsk_deviation: fdev
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_rate: samp_rate
+  states:
+    _io_cache: ('FSK Modulation', 'blk', [('samp_rate', '1000000.0'), ('fsk_deviation',
+      '500000.0')], [('0', 'byte', 1), ('in', 'message', 1)], [('0', 'complex', 1)],
+      '', ['fsk_deviation', 'samp_rate'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [760, 176.0]
+    rotation: 0
+    state: true
+- name: epy_block_1
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nfrom gnuradio import gr\nimport pmt\n\nclass\
+      \ ber_block(gr.basic_block):\n    def __init__(self):\n        gr.basic_block.__init__(self,\n\
+      \            name=\"ber_block\",\n            in_sig=None,\n            out_sig=None)\n\
+      \        \n        # Register input message ports\n        self.message_port_register_in(pmt.intern(\"\
+      input_1\"))\n        self.message_port_register_in(pmt.intern(\"input_2\"))\n\
+      \        \n        # Register output message port\n        self.message_port_register_out(pmt.intern(\"\
+      ber_output\"))\n        \n        # Set message handlers\n        self.set_msg_handler(pmt.intern(\"\
+      input_1\"), self.handle_msg_1)\n        self.set_msg_handler(pmt.intern(\"input_2\"\
+      ), self.handle_msg_2)\n        \n        # Initialize message variables\n  \
+      \      self.msg_1 = None\n        self.msg_2 = None\n\n    def handle_msg_1(self,\
+      \ msg_pmt):\n        # Convert PMT message to a list of unsigned 8-bit integers\n\
+      \        self.msg_1 = pmt.u8vector_elements(msg_pmt)\n        self.calculate_ber()\n\
+      \n    def handle_msg_2(self, msg_pmt):\n        # Convert PMT message to a list\
+      \ of unsigned 8-bit integers\n        self.msg_2 = pmt.u8vector_elements(msg_pmt)\n\
+      \        self.calculate_ber()\n\n    def calculate_ber(self):\n        # Ensure\
+      \ both messages are received and are the same length\n        if self.msg_1\
+      \ is not None and self.msg_2 is not None:\n            if len(self.msg_1) !=\
+      \ len(self.msg_2):\n                print(\"Error: Input vectors are of different\
+      \ lengths\")\n                return\n            \n            # Convert lists\
+      \ to NumPy arrays with dtype=uint8\n            data_1 = np.array(self.msg_1,\
+      \ dtype=np.uint8)\n            data_2 = np.array(self.msg_2, dtype=np.uint8)\n\
+      \n            # Calculate the bitwise XOR and count bit errors\n           \
+      \ bit_errors = np.sum(np.unpackbits(np.bitwise_xor(data_1, data_2)))\n     \
+      \       total_bits = len(data_1) * 8\n            ber = bit_errors / total_bits\n\
+      \            \n            # Output BER as PMT message\n            ber_msg\
+      \ = pmt.to_pmt(ber)\n            self.message_port_pub(pmt.intern(\"ber_output\"\
+      ), ber_msg)\n\n            # Clear messages after calculation\n            self.msg_1\
+      \ = None\n            self.msg_2 = None\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('ber_block', 'ber_block', [], [('input_2', 'message', 1), ('input_1',
+      'message', 1)], [('ber_output', 'message', 1)], '', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [424, 880.0]
+    rotation: 0
+    state: enabled
+- name: epy_block_12_0_0
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nfrom gnuradio import gr\nimport pmt\nimport\
+      \ time\n\nclass bits_to_message(gr.sync_block):\n    def __init__(self, preamble=[0xAB,\
+      \ 0xCD, 0xEF], header_length=1):\n        gr.sync_block.__init__(\n        \
+      \    self,\n            name='Bits to Message',\n            in_sig=[np.uint8],\n\
+      \            out_sig=[np.uint8]\n        )\n        self.preamble = np.unpackbits(np.array(preamble,\
+      \ dtype=np.uint8))\n        self.header_length = header_length\n        self.buffer\
+      \ = np.array([], dtype=np.uint8)\n        self.message_port_register_out(pmt.intern(\"\
+      crc_status\"))  \n        self.message_port_register_out(pmt.intern(\"extracted_payload\"\
+      ))  \n        self.message_port_register_in(pmt.intern(\"in\"))\n        self.set_msg_handler(pmt.intern(\"\
+      in\"), self.handle_message)\n        self.current_chunk_index = 0  # Start expecting\
+      \ chunk 0\n        self.process_flag = False  # Flag to control processing\n\
+      \        self.file_complete = False  # Flag to indicate if file transmission\
+      \ is complete\n        self.final_chunk_processed = False  # Flag to indicate\
+      \ if the final chunk was successfully processed\n        self.start_message_sent\
+      \ = False  # Flag to ensure start message is only sent once\n\n    def start(self):\n\
+      \        \"\"\"This method is called when the flowgraph starts.\"\"\"\n    \
+      \    if not self.start_message_sent:\n            start_msg = pmt.cons(pmt.from_long(0),\
+      \ pmt.intern(\"crc_start\"))\n            self.message_port_pub(pmt.intern(\"\
+      crc_status\"), start_msg)\n            self.start_message_sent = True\n    \
+      \        print(\"Start message sent to custom_message_to_bits block.\")\n  \
+      \      return super().start()\n\n    def handle_message(self, msg):\n      \
+      \  if pmt.is_pair(msg):\n            key = pmt.car(msg)\n            if pmt.eq(key,\
+      \ pmt.intern(\"demodulated_packet_ready\")):\n                self.process_flag\
+      \ = True\n                demodulated_bits = pmt.to_python(pmt.cdr(msg))\n \
+      \               self.buffer = np.concatenate((self.buffer, demodulated_bits))\n\
+      \            elif pmt.eq(key, pmt.intern(\"file_complete\")):\n            \
+      \    self.file_complete = True\n\n    def detect_preamble(self, data):\n   \
+      \     preamble_length = len(self.preamble)\n        for i in range(len(data)\
+      \ - preamble_length + 1):\n            if np.array_equal(data[i:i + preamble_length],\
+      \ self.preamble):\n                return i + preamble_length\n        return\
+      \ -1\n\n    def compute_crc(self, data):\n        crc = 0\n        for byte\
+      \ in data:\n            crc ^= byte\n            for _ in range(8):\n      \
+      \          if crc & 0x80:\n                    crc = (crc << 1) ^ 0x07  # Generator\
+      \ polynomial\n                else:\n                    crc <<= 1\n       \
+      \     crc &= 0xFF\n        return np.array([crc], dtype=np.uint8)\n\n    def\
+      \ check_crc(self, message, received_crc):\n        calculated_crc = self.compute_crc(message)\n\
+      \        return np.array_equal(calculated_crc, received_crc)\n\n    def extract_chunk_index(self,\
+      \ buffer, start_index):\n        \"\"\"Extracts the 4-byte chunk index from\
+      \ the buffer.\"\"\"\n        chunk_index_bits = buffer[start_index:start_index\
+      \ + 32]  # 4 bytes = 32 bits\n        chunk_index_bytes = np.packbits(chunk_index_bits)\n\
+      \        chunk_index = int.from_bytes(chunk_index_bytes, byteorder='big')  #\
+      \ Convert bytes to integer\n        return chunk_index\n\n    def work(self,\
+      \ input_items, output_items):\n        if not self.process_flag or self.final_chunk_processed:\n\
+      \            return 0  \n\n        output_idx = 0  # Initialize output index\n\
+      \n        while True:\n            preamble_index = self.detect_preamble(self.buffer)\n\
+      \            if preamble_index == -1:\n                break\n\n           \
+      \ header_end = preamble_index + self.header_length * 8\n            if header_end\
+      \ > len(self.buffer):\n                break\n\n            header = self.buffer[preamble_index:header_end]\n\
+      \            message_length = np.packbits(header)[0]\n            chunk_index_start\
+      \ = header_end\n            chunk_index_end = chunk_index_start + 32  # 4 bytes\
+      \ (32 bits)\n            \n            if chunk_index_end > len(self.buffer):\n\
+      \                break\n\n            chunk_index = self.extract_chunk_index(self.buffer,\
+      \ chunk_index_start)\n\n            message_start = chunk_index_end\n      \
+      \      message_end = message_start + message_length * 8\n            crc_start\
+      \ = message_end\n            crc_end = crc_start + 8\n\n            if crc_end\
+      \ > len(self.buffer):\n                break\n\n            # Verify that the\
+      \ received chunk index matches the expected chunk index\n            if chunk_index\
+      \ != self.current_chunk_index:\n                #print(f\"Expected chunk {self.current_chunk_index},\
+      \ but received chunk {chunk_index}. Skipping.\")\n                # Since chunk\
+      \ index does not match, skip this chunk and advance the buffer\n           \
+      \     self.buffer = self.buffer[crc_end:]  # Move buffer forward past this chunk\n\
+      \                continue\n\n            message_bits = self.buffer[message_start:message_end]\n\
+      \            crc_bits = self.buffer[crc_start:crc_end]\n\n            message_bytes\
+      \ = np.packbits(message_bits)\n            received_crc = np.packbits(crc_bits)\n\
+      \n            if self.check_crc(message_bytes, received_crc):\n            \
+      \    print(f\"CRC passed for chunk {chunk_index}\")\n                output_msg\
+      \ = pmt.cons(pmt.intern(\"crc_pass\"), pmt.from_long(chunk_index))\n       \
+      \         self.message_port_pub(pmt.intern(\"crc_status\"), output_msg)  # Send\
+      \ the crc_pass message\n\n                output_items[0][output_idx:output_idx\
+      \ + len(message_bytes)] = message_bytes\n                output_idx += len(message_bytes)\n\
+      \                self.process_flag = False\n\n                # Output the extracted\
+      \ payload \n                payload_msg = pmt.init_u8vector(len(message_bytes),\
+      \ message_bytes)\n                self.message_port_pub(pmt.intern(\"extracted_payload\"\
+      ), payload_msg)\n\n                # Move to the next expected chunk\n     \
+      \           self.current_chunk_index += 1  # Increment to expect the next chunk\n\
+      \n            else:\n                print(f\"CRC failed for chunk {chunk_index}\"\
+      )\n                output_msg = pmt.cons(pmt.intern(\"crc_fail\"), pmt.from_long(chunk_index))\n\
+      \                self.message_port_pub(pmt.intern(\"crc_status\"), output_msg)\
+      \  # Send the crc_fail message\n\n            # Advance the buffer\n       \
+      \     self.buffer = self.buffer[crc_end:]\n\n            # Check if this is\
+      \ the final chunk\n            if self.file_complete and len(self.buffer) ==\
+      \ 0:\n                self.final_chunk_processed = True\n                print(\"\
+      Final chunk processed. Halting further CRC checks.\")\n                return\
+      \ -1  # Signal to stop the flowgraph\n\n        self.consume(0, len(input_items[0]))\n\
+      \n        if self.file_complete and len(self.buffer) == 0:  \n            print(\"\
+      File transmission complete. Halting flowgraph.\")\n            return -1  \n\
+      \n        return output_idx\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    header_length: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    preamble: '[0xAB, 0xCD, 0xEF, 0xAA, 0xBD, 0x35, 0xBB, 0x55]'
+  states:
+    _io_cache: ('Bits to Message', 'bits_to_message', [('preamble', '[171, 205, 239]'),
+      ('header_length', '1')], [('0', 'byte', 1), ('in', 'message', 1)], [('0', 'byte',
+      1), ('extracted_payload', 'message', 1), ('crc_status', 'message', 1)], '',
+      ['header_length', 'preamble'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [824, 392.0]
+    rotation: 0
+    state: enabled
+- name: epy_block_2
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nfrom gnuradio import gr\nimport pmt\n\nclass\
+      \ fsk_demod(gr.sync_block):\n    def __init__(self, samp_rate=1e6, fsk_deviation=500e3):\n\
+      \        gr.sync_block.__init__(\n            self,\n            name='FSK Demodulation',\n\
+      \            in_sig=[np.complex64],\n            out_sig=[np.int8]\n       \
+      \ )\n        self.samp_rate = samp_rate\n        self.fsk_deviation = fsk_deviation\n\
+      \        self.counter = 0  # Initialize the counter\n\n        # Register a\
+      \ message output port\n        self.message_port_register_out(pmt.intern(\"\
+      out\"))\n\n    def work(self, input_items, output_items):\n        in0 = input_items[0]\n\
+      \        out = output_items[0]\n\n        for i in range(1, len(in0)):\n   \
+      \         phase_diff = np.angle(in0[i] * np.conj(in0[i-1]))\n            out[i]\
+      \ = 1 if phase_diff > 0 else 0\n\n        # Send a \"demodulated_packet_ready\"\
+      \ message after processing\n        demodulated_bits = pmt.init_u8vector(len(out),\
+      \ out)\n        demodulated_packet_ready_msg = pmt.cons(pmt.intern(\"demodulated_packet_ready\"\
+      ), demodulated_bits)\n        self.message_port_pub(pmt.intern(\"out\"), demodulated_packet_ready_msg)\n\
+      \n        return len(output_items[0])\n\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    fsk_deviation: fdev
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_rate: samp_rate
+  states:
+    _io_cache: ('FSK Demodulation', 'fsk_demod', [('samp_rate', '1000000.0'), ('fsk_deviation',
+      '500000.0')], [('0', 'complex', 1)], [('0', 'byte', 1), ('out', 'message', 1)],
+      '', ['fsk_deviation', 'samp_rate'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [584, 408.0]
+    rotation: 0
+    state: enabled
+- name: epy_block_5_0
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nfrom gnuradio import gr\nimport pmt\nimport\
+      \ time\n\nclass custom_message_to_bits(gr.basic_block):\n    def __init__(self,\
+      \ preamble=[0xAB, 0xCD, 0xEF], file_path=\"msg.txt\"):\n        gr.basic_block.__init__(self,\n\
+      \            name=\"custom_message_to_bits\",\n            in_sig=None,\n  \
+      \          out_sig=[np.uint8]\n        )\n        self.preamble = np.array(preamble,\
+      \ dtype=np.uint8)\n        self.file_path = file_path\n        self.chunk_size\
+      \ = 229\n        self.chunks = []\n        self.payload_buffer = []  # Buffer\
+      \ to store payloads for BER calculation\n        self.current_chunk_index =\
+      \ 0\n        self.ready_to_send = False  # Flag to control when to send the\
+      \ first chunk\n\n        # Register message ports\n        self.message_port_register_in(pmt.intern(\"\
+      crc_status\"))\n        self.set_msg_handler(pmt.intern(\"crc_status\"), self.handle_crc_status)\n\
+      \n        self.message_port_register_out(pmt.intern(\"output_msg\"))  # Unified\
+      \ output message port\n        self.message_port_register_out(pmt.intern(\"\
+      payload_buffer_out\"))  # Port to output the payload buffer\n\n        self.update_message()\n\
+      \n        # Set output multiple to accommodate the maximum possible packet size\n\
+      \        self.set_output_multiple(8 * (len(self.preamble) + self.chunk_size\
+      \ + 1 + 1 + 4))  # Added 4 for chunk index\n\n    def add_crc(self, chunk):\n\
+      \        \"\"\"Add CRC to the given chunk.\"\"\"\n        crc = 0\n        for\
+      \ byte in chunk:\n            crc ^= byte\n            for _ in range(8):\n\
+      \                if crc & 0x80:\n                    crc = (crc << 1) ^ 0x07\
+      \  # Generator polynomial\n                else:\n                    crc <<=\
+      \ 1\n            crc &= 0xFF\n        crc_bytes = np.array([crc], dtype=np.uint8)\n\
+      \        return np.concatenate((chunk, crc_bytes))\n\n    def send_payload(self,\
+      \ idx):\n        \"\"\"Send the current payload chunk from the buffer.\"\"\"\
+      \n        if idx < len(self.payload_buffer):  # Ensure the index is within bounds\n\
+      \            payload = self.payload_buffer[idx]\n\n            # Send only the\
+      \ payload as a PMT vector\n            payload_msg = pmt.init_u8vector(len(payload),\
+      \ payload)\n            self.message_port_pub(pmt.intern(\"payload_buffer_out\"\
+      ), payload_msg)\n        else:\n            print(f\"Index {idx} out of range\
+      \ for payload buffer\")\n\n    def update_message(self):\n        try:\n   \
+      \         with open(self.file_path, \"r\") as file:\n                message\
+      \ = file.read().strip()\n            message_bytes = np.frombuffer(message.encode('utf-8'),\
+      \ dtype=np.uint8)\n            self.chunks = [self.add_crc(message_bytes[i:i\
+      \ + self.chunk_size]) for i in range(0, len(message_bytes), self.chunk_size)]\n\
+      \        except FileNotFoundError:\n            print(\"Message file not found.\
+      \ Using default message.\")\n            default_message = \"Default Message\"\
+      \n            message_bytes = np.frombuffer(default_message.encode('utf-8'),\
+      \ dtype=np.uint8)\n            self.chunks = [self.add_crc(message_bytes)]\n\
+      \n        # Populate the payload buffer\n        self.payload_buffer = [chunk[:-1]\
+      \ for chunk in self.chunks]  # Store all payloads without CRC\n\n    def general_work(self,\
+      \ input_items, output_items):\n        output = output_items[0]\n        \n\
+      \        if not self.ready_to_send:\n            return 0\n\n\n        if self.ready_to_send\
+      \ and self.current_chunk_index < len(self.chunks):\n            chunk = self.chunks[self.current_chunk_index]\n\
+      \            chunk_index = np.array([(self.current_chunk_index >> i) & 0xFF\
+      \ for i in (24, 16, 8, 0)], dtype=np.uint8)  # 4-byte chunk index\n        \
+      \    payload_length = len(chunk) - 1  # Exclude CRC byte\n            header\
+      \ = np.array([payload_length], dtype=np.uint8)\n            packet = np.concatenate((self.preamble,\
+      \ header, chunk_index, chunk))\n            packet_bits = self.byte_to_bits(packet)\n\
+      \n            # Ensure the output buffer is large enough\n            if len(packet_bits)\
+      \ > len(output):\n                print(f\"Output buffer too small. Needed:\
+      \ {len(packet_bits)}, available: {len(output)}\")\n                return 0\n\
+      \n            # Write packet_bits to the output buffer\n            output[:len(packet_bits)]\
+      \ = packet_bits\n            produced = len(packet_bits)\n\n            # Mark\
+      \ as produced\n            self.consume_each(0)  # No input to consume\n   \
+      \         return produced\n        else:\n            print(\"File transmission\
+      \ complete.\")\n            output_msg = pmt.cons(pmt.intern(\"file_complete\"\
+      ), pmt.to_pmt(self.file_path))  # File completion message with file path\n \
+      \           self.message_port_pub(pmt.intern(\"output_msg\"), output_msg)\n\
+      \            return -1  # Signal to GNU Radio to stop the flowgraph\n\n    def\
+      \ byte_to_bits(self, byte_array):\n        \"\"\"Converts a byte array to a\
+      \ bit array.\"\"\"\n        return np.unpackbits(byte_array.astype(np.uint8))\
+      \  # Ensure the array is uint8\n\n    def handle_crc_status(self, msg):\n  \
+      \      car_part = pmt.car(msg)  # Get the car part of the message\n\n      \
+      \  # Check if the car part is a symbol\n        if pmt.is_symbol(car_part):\n\
+      \            status = pmt.symbol_to_string(car_part)\n        else:\n      \
+      \      # If not a symbol, just convert it to a string for logging (if needed)\n\
+      \            status = str(pmt.to_python(car_part))\n\n        # Handle the message\
+      \ based on the car part\n        if pmt.is_symbol(pmt.cdr(msg)):\n         \
+      \   message = pmt.symbol_to_string(pmt.cdr(msg))\n            if message ==\
+      \ \"crc_start\":\n                print(\"Received start message. Ready to send\
+      \ the first chunk.\")\n                self.ready_to_send = True  # Set flag\
+      \ to start sending chunks\n                self.current_chunk_index = 0  # Start\
+      \ from the first chunk\n                # Trigger the sending of the first chunk\
+      \ immediately\n                chunk_data = pmt.init_u8vector(len(self.chunks[self.current_chunk_index]),\
+      \ self.chunks[self.current_chunk_index])\n                output_msg = pmt.cons(pmt.intern(\"\
+      chunk_ready\"), chunk_data)\n                self.message_port_pub(pmt.intern(\"\
+      output_msg\"), output_msg)\n                self.send_payload(self.current_chunk_index)\n\
+      \n        elif status == \"crc_pass\":\n            if self.current_chunk_index\
+      \ < len(self.chunks)-1:\n                print(f\"CRC passed for chunk {self.current_chunk_index}.\
+      \ Moving to the next chunk.\")\n                time.sleep(1)\n            \
+      \    self.current_chunk_index += 1\n                # Send the next chunk\n\
+      \                chunk_data = pmt.init_u8vector(len(self.chunks[self.current_chunk_index]),\
+      \ self.chunks[self.current_chunk_index])\n                output_msg = pmt.cons(pmt.intern(\"\
+      chunk_ready\"), chunk_data)\n                self.message_port_pub(pmt.intern(\"\
+      output_msg\"), output_msg)\n\n                # Send the corresponding payload\n\
+      \                self.send_payload(self.current_chunk_index)\n            else:\n\
+      \                print(\"All chunks have been sent.\")\n                output_msg\
+      \ = pmt.cons(pmt.intern(\"file_complete\"), pmt.to_pmt(self.file_path))  # File\
+      \ completion message with file path\n                self.message_port_pub(pmt.intern(\"\
+      output_msg\"), output_msg)\n                return -1  # Signal to GNU Radio\
+      \ to stop the flowgraph\n        elif status == \"crc_fail\":\n            print(f\"\
+      Resending chunk {self.current_chunk_index} due to CRC failure.\")\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    file_path: '"/home/ben/Documents/test2"'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    preamble: '[0xAB, 0xCD, 0xEF, 0xAA, 0xBD, 0x35, 0xBB, 0x55]'
+  states:
+    _io_cache: ('custom_message_to_bits', 'custom_message_to_bits', [('preamble',
+      '[171, 205, 239]'), ('file_path', "'msg.txt'")], [('crc_status', 'message',
+      1)], [('0', 'byte', 1), ('payload_buffer_out', 'message', 1), ('output_msg',
+      'message', 1)], '', ['file_path', 'preamble'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [376, 168.0]
+    rotation: 0
+    state: enabled
+- name: epy_block_7
+  id: epy_block
+  parameters:
+    _source_code: "\nimport numpy as np\nfrom gnuradio import gr\nimport pmt\nimport\
+      \ os\n\nclass pmt_to_file_sink(gr.basic_block):\n    def __init__(self, filename='rx'):\n\
+      \        gr.basic_block.__init__(self,\n            name=\"PMT File Sink\",\n\
+      \            in_sig=[],\n            out_sig=[])\n        \n        # Register\
+      \ the input message port\n        self.message_port_register_in(pmt.intern(\"\
+      in\"))\n        self.set_msg_handler(pmt.intern(\"in\"), self.handle_msg)\n\
+      \        \n        # Open the file for writing\n        self.filename = filename\n\
+      \        self.file = open(self.filename, \"w\")\n\n    def handle_msg(self,\
+      \ msg):\n        # Check if the message is a u8vector\n        if pmt.is_u8vector(msg):\n\
+      \            # Convert u8vector to a Python list\n            msg_list = pmt.u8vector_elements(msg)\n\
+      \            # Convert list to a byte string\n            msg_str = ''.join([chr(x)\
+      \ for x in msg_list])\n            # Write the byte string to file\n       \
+      \     self.file.write(msg_str)# + \"\\n\")\n        else:\n            # Handle\
+      \ unexpected PMT types (just to be safe)\n            self.file.write(\"Unexpected\
+      \ PMT type\\n\")\n\n        # Ensure the data is written to the file\n     \
+      \   self.file.flush()\n\n    def stop(self):\n        # Close the file when\
+      \ the block is stopped\n        self.file.close()\n        return super().stop()\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    filename: '''/home/ben/Documents/rx'''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('PMT File Sink', 'pmt_to_file_sink', [('filename', "'rx'")], [('in',
+      'message', 1)], [], '', ['filename'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1152, 420.0]
+    rotation: 0
+    state: enabled
+- name: epy_block_7_0
+  id: epy_block
+  parameters:
+    _source_code: "\nimport numpy as np\nfrom gnuradio import gr\nimport pmt\nimport\
+      \ os\n\nclass pmt_to_file_sink(gr.basic_block):\n    def __init__(self, filename='rx'):\n\
+      \        gr.basic_block.__init__(self,\n            name=\"PMT File Sink\",\n\
+      \            in_sig=[],\n            out_sig=[])\n        \n        # Register\
+      \ the input message port\n        self.message_port_register_in(pmt.intern(\"\
+      in\"))\n        self.set_msg_handler(pmt.intern(\"in\"), self.handle_msg)\n\
+      \        \n        # Open the file for writing\n        self.filename = filename\n\
+      \        self.file = open(self.filename, \"w\")\n\n    def handle_msg(self,\
+      \ msg):\n        # Check if the message is a u8vector\n        if pmt.is_u8vector(msg):\n\
+      \            # Convert u8vector to a Python list\n            msg_list = pmt.u8vector_elements(msg)\n\
+      \            # Convert list to a byte string\n            msg_str = ''.join([chr(x)\
+      \ for x in msg_list])\n            # Write the byte string to file\n       \
+      \     self.file.write(msg_str)# + \"\\n\")\n        else:\n            # Handle\
+      \ unexpected PMT types (just to be safe)\n            self.file.write(\"Unexpected\
+      \ PMT type\\n\")\n\n        # Ensure the data is written to the file\n     \
+      \   self.file.flush()\n\n    def stop(self):\n        # Close the file when\
+      \ the block is stopped\n        self.file.close()\n        return super().stop()\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    filename: '''/home/ben/Documents/payload_sent'''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('PMT File Sink', 'pmt_to_file_sink', [('filename', "'rx'")], [('in',
+      'message', 1)], [], '', ['filename'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [728, 292.0]
+    rotation: 0
+    state: enabled
+- name: qtgui_time_sink_x_0
+  id: qtgui_time_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    axislabels: 'True'
+    color1: blue
+    color10: dark blue
+    color2: red
+    color3: green
+    color4: black
+    color5: cyan
+    color6: magenta
+    color7: yellow
+    color8: dark red
+    color9: dark green
+    comment: ''
+    ctrlpanel: 'False'
+    entags: 'True'
+    grid: 'False'
+    gui_hint: ''
+    label1: Signal 1
+    label10: Signal 10
+    label2: Signal 2
+    label3: Signal 3
+    label4: Signal 4
+    label5: Signal 5
+    label6: Signal 6
+    label7: Signal 7
+    label8: Signal 8
+    label9: Signal 9
+    legend: 'True'
+    marker1: '-1'
+    marker10: '-1'
+    marker2: '-1'
+    marker3: '-1'
+    marker4: '-1'
+    marker5: '-1'
+    marker6: '-1'
+    marker7: '-1'
+    marker8: '-1'
+    marker9: '-1'
+    name: '""'
+    nconnections: '1'
+    size: '1024'
+    srate: samp_rate
+    stemplot: 'False'
+    style1: '1'
+    style10: '1'
+    style2: '1'
+    style3: '1'
+    style4: '1'
+    style5: '1'
+    style6: '1'
+    style7: '1'
+    style8: '1'
+    style9: '1'
+    tr_chan: '0'
+    tr_delay: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: complex
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    ylabel: Amplitude
+    ymax: '1'
+    ymin: '-1'
+    yunit: '""'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [384, 1044.0]
+    rotation: 0
+    state: disabled
+- name: root_raised_cosine_filter_0
+  id: root_raised_cosine_filter
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha: '1'
+    comment: ''
+    decim: '10'
+    gain: '1'
+    interp: '10'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    ntaps: '1000'
+    samp_rate: samp_rate
+    sym_rate: symb_rate
+    type: interp_fir_filter_ccf
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1008, 148.0]
+    rotation: 0
+    state: enabled
+- name: root_raised_cosine_filter_0_0
+  id: root_raised_cosine_filter
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha: '1'
+    comment: ''
+    decim: '10'
+    gain: '10'
+    interp: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    ntaps: '1000'
+    samp_rate: samp_rate
+    sym_rate: symb_rate
+    type: fir_filter_ccf
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [312, 380.0]
+    rotation: 0
+    state: enabled
+- name: soapy_limesdr_sink_0
+  id: soapy_limesdr_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bandwidth: '0.0'
+    center_freq: freq
+    comment: ''
+    dev_args: ''
+    freq_correction: '0'
+    gain: '20.0'
+    samp_rate: samp_rate
+    type: fc32
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [384, 1192.0]
+    rotation: 0
+    state: disabled
+- name: soapy_limesdr_sink_1
+  id: soapy_limesdr_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bandwidth: '0.0'
+    center_freq: freq
+    comment: ''
+    dev_args: ''
+    freq_correction: '0'
+    gain: '20.0'
+    samp_rate: samp_rate
+    type: fc32
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1304, 192.0]
+    rotation: 0
+    state: enabled
+- name: soapy_limesdr_source_0
+  id: soapy_limesdr_source
+  parameters:
+    affinity: ''
+    alias: ''
+    bandwidth: '0.0'
+    center_freq: freq
+    comment: ''
+    dev_args: ''
+    freq_correction: '0'
+    gain: '20.0'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_rate: samp_rate
+    type: fc32
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [104, 1204.0]
+    rotation: 0
+    state: disabled
+- name: soapy_limesdr_source_1
+  id: soapy_limesdr_source
+  parameters:
+    affinity: ''
+    alias: ''
+    bandwidth: '0.0'
+    center_freq: freq
+    comment: ''
+    dev_args: ''
+    freq_correction: '0'
+    gain: '20.0'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_rate: samp_rate
+    type: fc32
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [56, 412.0]
+    rotation: 0
+    state: enabled
+- name: virtual_sink_0
+  id: virtual_sink
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: data
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1200, 1236.0]
+    rotation: 0
+    state: disabled
+- name: virtual_source_0
+  id: virtual_source
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: data
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [616, 1212.0]
+    rotation: 0
+    state: disabled
+- name: zeromq_pull_msg_source_0
+  id: zeromq_pull_msg_source
+  parameters:
+    address: '"tcp://127.0.0.1:55450"'
+    affinity: ''
+    alias: ''
+    bind: 'False'
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    timeout: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [56, 188.0]
+    rotation: 0
+    state: enabled
+- name: zeromq_push_msg_sink_0
+  id: zeromq_push_msg_sink
+  parameters:
+    address: '"tcp://127.0.0.1:55450"'
+    affinity: ''
+    alias: ''
+    bind: 'True'
+    comment: ''
+    timeout: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1152, 500.0]
+    rotation: 0
+    state: enabled
+
+connections:
+- [epy_block_0, '0', root_raised_cosine_filter_0, '0']
+- [epy_block_1, ber_output, blocks_message_debug_0, print]
+- [epy_block_12_0_0, '0', blocks_null_sink_0, '0']
+- [epy_block_12_0_0, crc_status, zeromq_push_msg_sink_0, in]
+- [epy_block_12_0_0, extracted_payload, epy_block_7, in]
+- [epy_block_2, '0', epy_block_12_0_0, '0']
+- [epy_block_2, out, epy_block_12_0_0, in]
+- [epy_block_5_0, '0', epy_block_0, '0']
+- [epy_block_5_0, output_msg, epy_block_0, in]
+- [epy_block_5_0, payload_buffer_out, epy_block_7_0, in]
+- [root_raised_cosine_filter_0, '0', soapy_limesdr_sink_1, '0']
+- [root_raised_cosine_filter_0_0, '0', epy_block_2, '0']
+- [soapy_limesdr_source_1, '0', root_raised_cosine_filter_0_0, '0']
+- [zeromq_pull_msg_source_0, out, epy_block_5_0, crc_status]
+
+metadata:
+  file_format: 1
+  grc_version: 3.10.10.0
