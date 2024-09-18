@@ -1,0 +1,282 @@
+options:
+  parameters:
+    author: ubuntu
+    catch_exceptions: 'True'
+    category: '[GRC Hier Blocks]'
+    cmake_opt: ''
+    comment: ''
+    copyright: ''
+    description: ''
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: no_gui
+    hier_block_src_path: '.:'
+    id: LoRa_tx_test_flowgraph
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: prompt
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: LoRa_tx_test_flowgraph
+    window_size: (1000,1000)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 8]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: bw
+  id: variable_config
+  parameters:
+    comment: ''
+    config_file: /home/ubuntu/LoRa_Tests/LoRa_config.ini
+    option: bw
+    section: LoRa
+    type: int
+    value: '62500'
+    writeback: None
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [608, 4.0]
+    rotation: 0
+    state: true
+- name: freq
+  id: variable
+  parameters:
+    comment: ''
+    value: '915000000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [280, 12.0]
+    rotation: 0
+    state: true
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '1000000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [184, 12.0]
+    rotation: 0
+    state: enabled
+- name: sf
+  id: variable_config
+  parameters:
+    comment: ''
+    config_file: /home/ubuntu/LoRa_Tests/LoRa_config.ini
+    option: sf
+    section: LoRa
+    type: int
+    value: '7'
+    writeback: None
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [432, 4.0]
+    rotation: 0
+    state: true
+- name: blocks_message_debug_0
+  id: blocks_message_debug
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    en_uvec: 'True'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [224, 272.0]
+    rotation: 0
+    state: true
+- name: epy_block_0
+  id: epy_block
+  parameters:
+    _source_code: "import time\nimport tkinter as tk\nfrom tkinter import simpledialog\n\
+      from gnuradio import gr\nimport pmt\n\nclass FileLineTransmitter(gr.sync_block):\n\
+      \    def __init__(self, file_path = \"/home/ubuntu/Desktop/LoRa BER Testing/tx_test_data\"\
+      , sf=7, bw=62.5, cr=5):\n        gr.sync_block.__init__(\n            self,\n\
+      \            name=\"FileLineTransmitter\",\n            in_sig=None,\n     \
+      \       out_sig=None,\n        )\n        self.message_port_register_out(pmt.intern(\"\
+      out\"))\n\n        # Open the file and read lines\n        self.lines = self.load_file(file_path)\n\
+      \        self.current_index = 0\n        self.transmit_delay = 1.5  # seconds\n\
+      \        self.sf = sf\n        self.bw = bw\n        self.cr = cr\n\n    def\
+      \ load_file(self, file_path):\n        try:\n            with open(file_path,\
+      \ 'r') as file:\n                return file.readlines()\n        except Exception\
+      \ as e:\n            print(f\"Error reading file: {e}\")\n            return\
+      \ []\n\n    def work(self, input_items, output_items):\n        if self.current_index\
+      \ < len(self.lines):\n            # Prepare the message to send\n          \
+      \  print(\"Transmitting line at: \" + str(self.sf) + str(self.bw) + str(self.cr))\n\
+      \            line = self.lines[self.current_index].strip()\n            message\
+      \ = pmt.intern(line)\n            \n            # Send the message\n       \
+      \     self.message_port_pub(pmt.intern(\"out\"), message)\n            self.current_index\
+      \ += 1\n            \n            # Sleep for the specified delay\n        \
+      \    time.sleep(self.transmit_delay)\n        else:\n            print(\"file\
+      \ done transmitting\")\n\n        # Indicate that we have finished processing\n\
+      \        return len(output_items)\n\n"
+    affinity: ''
+    alias: ''
+    bw: bw
+    comment: ''
+    cr: '5'
+    file_path: '"/home/ubuntu/Desktop/LoRa BER Testing/tx_test_data.txt"'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    sf: sf
+  states:
+    _io_cache: ('FileLineTransmitter', 'FileLineTransmitter', [('file_path', "'/home/ubuntu/Desktop/LoRa
+      BER Testing/tx_test_data'"), ('sf', '7'), ('bw', '62.5'), ('cr', '5')], [],
+      [('out', 'message', 1)], '', ['bw', 'cr', 'sf'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [0, 164.0]
+    rotation: 0
+    state: true
+- name: epy_block_1
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nfrom gnuradio import gr\nimport pmt\n\nclass\
+      \ custom_message_to_bits(gr.basic_block):\n    def __init__(self, preamble=[0xAB,\
+      \ 0xCD, 0xEF], file_path=\"msg.txt\"):\n        gr.basic_block.__init__(self,\n\
+      \            name=\"custom_message_to_bits\",\n            in_sig=None,\n  \
+      \          out_sig=[np.uint8]\n        )\n        self.preamble = np.array(preamble,\
+      \ dtype=np.uint8)\n        self.file_path = file_path\n        self.chunk_size\
+      \ = 255\n        self.set_output_multiple(8 * (len(self.preamble) + self.chunk_size\
+      \ + 1 + 1))  # Output in bits, including CRC\n        self.chunks = []\n   \
+      \     self.current_chunk_index = 0\n        self.message_port_register_in(pmt.intern(\"\
+      crc_status\"))\n        self.set_msg_handler(pmt.intern(\"crc_status\"), self.handle_crc_status)\n\
+      \        self.message_port_register_out(pmt.intern(\"out\"))\n        self.update_message()\n\
+      \        self.transmission_complete = False  # Flag to indicate transmission\
+      \ complete\n        self.send_initial_chunk()  # Send the first chunk immediately\n\
+      \n    def update_message(self):\n        try:\n            with open(self.file_path,\
+      \ \"r\") as file:\n                message = file.read().strip()\n         \
+      \   message_bytes = np.frombuffer(message.encode('utf-8'), dtype=np.uint8)\n\
+      \            self.chunks = [self.add_crc(message_bytes[i:i + self.chunk_size])\
+      \ for i in range(0, len(message_bytes), self.chunk_size)]\n        except FileNotFoundError:\n\
+      \            print(\"Message file not found. Using default message.\")\n   \
+      \         default_message = \"Default Message\"\n            message_bytes =\
+      \ np.frombuffer(default_message.encode('utf-8'), dtype=np.uint8)\n         \
+      \   self.chunks = [self.add_crc(message_bytes)]\n\n    def add_crc(self, chunk):\n\
+      \        crc = 0\n        for byte in chunk:\n            crc ^= byte\n    \
+      \        for _ in range(8):\n                if crc & 0x80:\n              \
+      \      crc = (crc << 1) ^ 0x07  # Generator polynomial\n                else:\n\
+      \                    crc <<= 1\n            crc &= 0xFF\n        crc_bytes =\
+      \ np.array([crc], dtype=np.uint8)\n        return np.concatenate((chunk, crc_bytes))\n\
+      \n    def send_initial_chunk(self):\n        if self.current_chunk_index < len(self.chunks):\n\
+      \            chunk_data = pmt.init_u8vector(len(self.chunks[self.current_chunk_index]),\
+      \ self.chunks[self.current_chunk_index])\n            chunk_ready_msg = pmt.cons(pmt.intern(\"\
+      chunk_ready\"), chunk_data)\n            self.message_port_pub(pmt.intern(\"\
+      out\"), chunk_ready_msg)\n            #print(f\"Sent initial chunk {self.current_chunk_index}.\"\
+      )\n\n    def general_work(self, input_items, output_items):\n        if self.transmission_complete:\n\
+      \            return -1  # Stop the block and flowgraph\n\n        output = output_items[0]\n\
+      \n        if self.current_chunk_index < len(self.chunks):\n            chunk\
+      \ = self.chunks[self.current_chunk_index]\n            payload_length = len(chunk)\
+      \ - 1  # Exclude CRC length from payload length\n            header = np.array([payload_length],\
+      \ dtype=np.uint8)\n            packet = np.concatenate((self.preamble, header,\
+      \ chunk))\n            packet_bits = self.byte_to_bits(packet)\n\n         \
+      \   output[:len(packet_bits)] = packet_bits\n            produced = len(packet_bits)\n\
+      \        else:\n            print(\"File transmission complete.\")\n       \
+      \     self.transmission_complete = True\n            return -1  # Signal to\
+      \ GNU Radio to stop the flowgraph\n\n        self.consume_each(0)  # No input\
+      \ to consume\n        return produced\n\n    def byte_to_bits(self, byte_array):\n\
+      \        \"\"\"Converts a byte array to a bit array.\"\"\"\n        return np.unpackbits(byte_array)\n\
+      \n    def handle_crc_status(self, msg):\n        if self.transmission_complete:\n\
+      \            return  # Do nothing if transmission is complete\n\n        status\
+      \ = pmt.symbol_to_string(pmt.car(msg))\n\n        if status == \"crc_pass\"\
+      :\n            if self.current_chunk_index < len(self.chunks) - 1:\n       \
+      \         self.current_chunk_index += 1\n                print(f\"CRC passed\
+      \ for chunk {self.current_chunk_index}. Moving to the next chunk.\")\n     \
+      \           \n                # Send the \"chunk_ready\" message along with\
+      \ the chunk data\n                chunk_data = pmt.init_u8vector(len(self.chunks[self.current_chunk_index]),\
+      \ self.chunks[self.current_chunk_index])\n                chunk_ready_msg =\
+      \ pmt.cons(pmt.intern(\"chunk_ready\"), chunk_data)\n                self.message_port_pub(pmt.intern(\"\
+      out\"), chunk_ready_msg)\n                \n            else:\n            \
+      \    print(\"File transmission complete.\")\n                self.transmission_complete\
+      \ = True\n\n        elif status == \"crc_fail\":\n            print(f\"Resending\
+      \ chunk {self.current_chunk_index} due to CRC failure.\")\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    file_path: '''/home/ben/Documents/test2'''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    preamble: '[0xAB, 0xCD, 0xEF, 0xA1, 0x54, 0xEB, 0xBA, 0xDC, 0xFF]'
+  states:
+    _io_cache: ('custom_message_to_bits', 'custom_message_to_bits', [('preamble',
+      '[171, 205, 239]'), ('file_path', "'msg.txt'")], [('crc_status', 'message',
+      1)], [('0', 'byte', 1), ('out', 'message', 1)], '', ['file_path', 'preamble'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [200, 432.0]
+    rotation: 0
+    state: enabled
+- name: lora_tx_0
+  id: lora_tx
+  parameters:
+    affinity: ''
+    alias: ''
+    bw: bw
+    comment: ''
+    cr: '1'
+    frame_zero_padd: '1280'
+    has_crc: 'True'
+    impl_head: 'False'
+    ldro: '2'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_rate: '1000000'
+    sf: sf
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [264, 116.0]
+    rotation: 0
+    state: true
+- name: soapy_limesdr_sink_0
+  id: soapy_limesdr_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bandwidth: '0.0'
+    center_freq: freq
+    comment: ''
+    dev_args: ''
+    freq_correction: '0'
+    gain: '30.0'
+    samp_rate: samp_rate
+    type: fc32
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [544, 168.0]
+    rotation: 0
+    state: enabled
+
+connections:
+- [epy_block_0, out, blocks_message_debug_0, print]
+- [epy_block_0, out, lora_tx_0, in]
+- [lora_tx_0, '0', soapy_limesdr_sink_0, '0']
+
+metadata:
+  file_format: 1
+  grc_version: 3.10.3.0

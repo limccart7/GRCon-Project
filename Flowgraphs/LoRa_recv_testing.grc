@@ -1,0 +1,215 @@
+options:
+  parameters:
+    author: ubuntu
+    catch_exceptions: 'True'
+    category: '[GRC Hier Blocks]'
+    cmake_opt: ''
+    comment: ''
+    copyright: ''
+    description: ''
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: qt_gui
+    hier_block_src_path: '.:'
+    id: LoRa_recv_testing
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: prompt
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: Not titled yet
+    window_size: (1000,1000)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 8]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: bw
+  id: variable_config
+  parameters:
+    comment: ''
+    config_file: /home/ubuntu/LoRa_Tests/LoRa_config.ini
+    option: bw
+    section: LoRa
+    type: int
+    value: '62500'
+    writeback: None
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [560, 4.0]
+    rotation: 0
+    state: true
+- name: file_path
+  id: variable_config
+  parameters:
+    comment: ''
+    config_file: /home/ubuntu/LoRa_Tests/LoRa_config.ini
+    option: file_path
+    section: LoRa
+    type: string
+    value: '0'
+    writeback: None
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [728, 4.0]
+    rotation: 0
+    state: true
+- name: freq
+  id: variable
+  parameters:
+    comment: ''
+    value: '915000000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [296, 4.0]
+    rotation: 0
+    state: true
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '1000000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [200, 4.0]
+    rotation: 0
+    state: enabled
+- name: sf
+  id: variable_config
+  parameters:
+    comment: ''
+    config_file: /home/ubuntu/LoRa_Tests/LoRa_config.ini
+    option: sf
+    section: LoRa
+    type: int
+    value: '7'
+    writeback: None
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [392, 4.0]
+    rotation: 0
+    state: true
+- name: blocks_message_debug_0
+  id: blocks_message_debug
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    en_uvec: 'True'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [672, 200.0]
+    rotation: 0
+    state: true
+- name: epy_block_0_0
+  id: epy_block
+  parameters:
+    _source_code: "import os\nfrom gnuradio import gr\nimport pmt\n\nclass payload_writer(gr.sync_block):\n\
+      \    def __init__(self, filepath=\"/home/ubuntu/LoRa_Tests/message_storage.txt\"\
+      ):\n        gr.sync_block.__init__(\n            self,\n            name=\"\
+      payload_writer\",\n            in_sig=None,\n            out_sig=None,\n   \
+      \     )\n        self.message_port_register_in(pmt.intern(\"payload\"))\n  \
+      \      self.set_msg_handler(pmt.intern(\"payload\"), self.handle_msg)\n    \
+      \    self.filepath = filepath\n        \n        # Check if the file exists\n\
+      \        if not os.path.exists(self.filepath):\n            # Create the file\
+      \ if it does not exist\n            with open(self.filepath, 'w') as file:\n\
+      \                pass\n        else:\n            # Overwrite the file every\
+      \ time the flowgraph is run if it exists\n            with open(self.filepath,\
+      \ 'w') as file:\n                file.write(\"\")\n\n    def handle_msg(self,\
+      \ msg):\n        if pmt.is_pair(msg):\n            payload = pmt.symbol_to_string(pmt.cdr(msg))\n\
+      \        else:\n            payload = pmt.symbol_to_string(msg)\n        \n\
+      \        with open(self.filepath, 'a') as file:\n            file.write(payload\
+      \ + \"\\n\")\n\n    def work(self, input_items, output_items):\n        return\
+      \ len(output_items)\n\n\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    filepath: '"/home/ubuntu/LoRa_Tests/message_storage.txt"'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('payload_writer', 'payload_writer', [('filepath', "'/home/ubuntu/LoRa_Tests/message_storage.txt'")],
+      [('payload', 'message', 1)], [], '', ['filepath'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [664, 332.0]
+    rotation: 0
+    state: true
+- name: lora_rx_0
+  id: lora_rx
+  parameters:
+    affinity: ''
+    alias: ''
+    bw: '125000'
+    comment: ''
+    cr: '1'
+    has_crc: 'True'
+    impl_head: 'False'
+    ldro: '2'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    pay_len: '255'
+    print_rx: '[True,True]'
+    samp_rate: samp_rate
+    sf: sf
+    soft_decoding: 'True'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [352, 164.0]
+    rotation: 0
+    state: true
+- name: soapy_limesdr_source_0
+  id: soapy_limesdr_source
+  parameters:
+    affinity: ''
+    alias: ''
+    bandwidth: '0.0'
+    center_freq: freq
+    comment: ''
+    dev_args: ''
+    freq_correction: '0'
+    gain: '40'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_rate: samp_rate
+    type: fc32
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [48, 172.0]
+    rotation: 0
+    state: enabled
+
+connections:
+- [lora_rx_0, out, blocks_message_debug_0, print]
+- [lora_rx_0, out, epy_block_0_0, payload]
+- [soapy_limesdr_source_0, '0', lora_rx_0, '0']
+
+metadata:
+  file_format: 1
+  grc_version: 3.10.3.0
