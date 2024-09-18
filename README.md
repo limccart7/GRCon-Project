@@ -1,5 +1,5 @@
 # GRCon-Project
-The "Camera Ready" Version of the work of Liam McCarthy and Benjamin Duval for GNU Radio Conference 2024
+The "Camera Ready" Version of the undergraduate research work of Liam McCarthy and Benjamin Duval for GNU Radio Conference 2024
 
 Rest of the "QuAD Pro": https://github.com/limccart7/QuAD-Pro-Prototype
 
