@@ -1,0 +1,4 @@
+These tutorials are specific to Cal Poly's EE504 Class, however can likely be used or modified for getting students up to speed quickly with GNU Radio Companion. Please reach out with any questions or suggestions.
+
+
+Also note, some of these tutorials were not used/completed, so some images may be missing

@@ -115,6 +115,7 @@ blocks:
     alias: ''
     comment: ''
     en_uvec: 'True'
+    log_level: info
   states:
     bus_sink: false
     bus_source: false
@@ -156,7 +157,7 @@ blocks:
     bus_structure: null
     coordinate: [664, 332.0]
     rotation: 0
-    state: true
+    state: disabled
 - name: lora_rx_0
   id: lora_rx
   parameters:
@@ -212,4 +213,4 @@ connections:
 
 metadata:
   file_format: 1
-  grc_version: 3.10.3.0
+  grc_version: 3.10.9.2
